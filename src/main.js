@@ -73,15 +73,21 @@ function updateTrayMenu(usageData = null) {
 function createWindow() {
   if (window) {
     window.show();
+    positionWindowUnderTray();
     return;
   }
   
   window = new BrowserWindow({
-    width: 400,
-    height: 600,
+    width: 380,
+    height: 580,
     show: false,
-    frame: true,
+    frame: false,
     resizable: false,
+    transparent: true,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    vibrancy: 'popover', // macOS vibrancy effect for glass-like appearance
+    visualEffectState: 'active',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -92,6 +98,7 @@ function createWindow() {
   window.loadFile(path.join(__dirname, 'index.html'));
   
   window.once('ready-to-show', () => {
+    positionWindowUnderTray();
     window.show();
   });
   
@@ -101,6 +108,26 @@ function createWindow() {
       window.hide();
     }
   });
+  
+  // Hide window when it loses focus
+  window.on('blur', () => {
+    if (!app.isQuitting) {
+      window.hide();
+    }
+  });
+}
+
+function positionWindowUnderTray() {
+  if (!window || !tray) return;
+  
+  const windowBounds = window.getBounds();
+  const trayBounds = tray.getBounds();
+  
+  // Position window below the tray icon (centered horizontally)
+  const x = Math.round(trayBounds.x + (trayBounds.width / 2) - (windowBounds.width / 2));
+  const y = Math.round(trayBounds.y + trayBounds.height + 5); // 5px gap below menu bar
+  
+  window.setPosition(x, y, false);
 }
 
 async function showTokenDialog() {
