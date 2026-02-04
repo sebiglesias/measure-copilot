@@ -120,11 +120,16 @@ async function showTokenDialog() {
   }
 }
 
-async function refreshUsageData() {
+async function refreshUsageData(targetWindow = null) {
   const token = store.get('githubToken');
   
   if (!token) {
     updateTrayMenu(null);
+    if (targetWindow) {
+      targetWindow.send('usage-data-updated', null);
+    } else if (window) {
+      window.webContents.send('usage-data-updated', null);
+    }
     return;
   }
   
@@ -136,12 +141,19 @@ async function refreshUsageData() {
     const usageData = await githubAPI.getUsageData();
     updateTrayMenu(usageData);
     
-    if (window) {
+    if (targetWindow) {
+      targetWindow.send('usage-data-updated', usageData);
+    } else if (window) {
       window.webContents.send('usage-data-updated', usageData);
     }
   } catch (error) {
     console.error('Error fetching usage data:', error);
     updateTrayMenu(null);
+    if (targetWindow) {
+      targetWindow.send('usage-data-updated', null);
+    } else if (window) {
+      window.webContents.send('usage-data-updated', null);
+    }
   }
 }
 
@@ -149,12 +161,12 @@ async function refreshUsageData() {
 ipcMain.on('save-token', async (event, token) => {
   store.set('githubToken', token);
   githubAPI = new GitHubAPI(token, store);
-  await refreshUsageData();
+  await refreshUsageData(event.sender);
   event.reply('token-saved');
 });
 
 ipcMain.on('get-usage-data', async (event) => {
-  await refreshUsageData();
+  await refreshUsageData(event.sender);
 });
 
 ipcMain.on('clear-token', (event) => {
