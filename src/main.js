@@ -156,11 +156,13 @@ async function refreshUsageData(targetWebContents = null) {
 ipcMain.on('save-token', async (event, token) => {
   store.set('githubToken', token);
   githubAPI = new GitHubAPI(token, store);
+  event.reply('token-saved', true); // Send true to indicate token exists
   await refreshUsageData(event.sender);
-  event.reply('token-saved');
 });
 
 ipcMain.on('get-usage-data', async (event) => {
+  const hasToken = !!store.get('githubToken');
+  event.reply('token-status', hasToken);
   await refreshUsageData(event.sender);
 });
 
