@@ -120,20 +120,20 @@ async function showTokenDialog() {
   }
 }
 
-function sendUsageDataUpdate(targetWindow, data) {
-  if (targetWindow) {
-    targetWindow.send('usage-data-updated', data);
+function sendUsageDataUpdate(targetWebContents, data) {
+  if (targetWebContents) {
+    targetWebContents.send('usage-data-updated', data);
   } else if (window) {
     window.webContents.send('usage-data-updated', data);
   }
 }
 
-async function refreshUsageData(targetWindow = null) {
+async function refreshUsageData(targetWebContents = null) {
   const token = store.get('githubToken');
   
   if (!token) {
     updateTrayMenu(null);
-    sendUsageDataUpdate(targetWindow, null);
+    sendUsageDataUpdate(targetWebContents, null);
     return;
   }
   
@@ -144,11 +144,11 @@ async function refreshUsageData(targetWindow = null) {
   try {
     const usageData = await githubAPI.getUsageData();
     updateTrayMenu(usageData);
-    sendUsageDataUpdate(targetWindow, usageData);
+    sendUsageDataUpdate(targetWebContents, usageData);
   } catch (error) {
     console.error('Error fetching usage data:', error);
     updateTrayMenu(null);
-    sendUsageDataUpdate(targetWindow, null);
+    sendUsageDataUpdate(targetWebContents, null);
   }
 }
 
