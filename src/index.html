@@ -212,6 +212,11 @@
     <div id="dashboard" class="hidden">
       <h1>GitHub Copilot Usage</h1>
       
+      <div id="errorMessage" class="hidden" style="background: #fed7d7; color: #742a2a; padding: 12px; border-radius: 8px; margin-bottom: 16px; text-align: center;">
+        <strong>⚠️ Error loading usage data</strong>
+        <p style="font-size: 12px; margin-top: 4px;">Please check your token and try again.</p>
+      </div>
+      
       <div class="usage-card">
         <h2>Monthly Usage</h2>
         <div class="usage-value" id="remainingValue">-</div>
@@ -280,10 +285,12 @@
       document.getElementById('dashboard').classList.add('hidden');
     });
     
-    window.electronAPI.onTokenSaved(() => {
-      document.getElementById('tokenSetup').classList.add('hidden');
-      document.getElementById('dashboard').classList.remove('hidden');
-      document.getElementById('tokenInput').value = '';
+    window.electronAPI.onTokenSaved((event, hasToken) => {
+      if (hasToken) {
+        document.getElementById('tokenSetup').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+        document.getElementById('tokenInput').value = '';
+      }
     });
     
     window.electronAPI.onTokenCleared(() => {
@@ -291,15 +298,28 @@
       document.getElementById('dashboard').classList.add('hidden');
     });
     
-    window.electronAPI.onUsageDataUpdated((event, data) => {
-      if (!data) {
+    window.electronAPI.onTokenStatus((event, hasToken) => {
+      if (hasToken) {
+        document.getElementById('tokenSetup').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+      } else {
         document.getElementById('tokenSetup').classList.remove('hidden');
         document.getElementById('dashboard').classList.add('hidden');
+      }
+    });
+    
+    window.electronAPI.onUsageDataUpdated((event, data) => {
+      if (!data) {
+        // Show error message in dashboard if we're already showing it
+        // (meaning we have a token but the API call failed)
+        if (!document.getElementById('dashboard').classList.contains('hidden')) {
+          document.getElementById('errorMessage').classList.remove('hidden');
+        }
         return;
       }
       
-      document.getElementById('tokenSetup').classList.add('hidden');
-      document.getElementById('dashboard').classList.remove('hidden');
+      // We have data - hide error message
+      document.getElementById('errorMessage').classList.add('hidden');
       
       // Update monthly usage
       const percentUsed = ((data.total - data.remaining) / data.total * 100);

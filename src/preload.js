@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onShowTokenInput: (callback) => ipcRenderer.on('show-token-input', callback),
   onTokenSaved: (callback) => ipcRenderer.on('token-saved', callback),
   onTokenCleared: (callback) => ipcRenderer.on('token-cleared', callback),
+  onTokenStatus: (callback) => ipcRenderer.on('token-status', callback),
   onUsageDataUpdated: (callback) => ipcRenderer.on('usage-data-updated', callback),
   
   openExternal: (url) => {
