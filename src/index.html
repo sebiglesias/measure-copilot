@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Copilot Usage Monitor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    
+    .usage-card {
+      background: #f7fafc;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border-left: 4px solid #667eea;
+    }
+    
+    .usage-card h2 {
+      font-size: 14px;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    
+    .usage-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #2d3748;
+      margin-bottom: 4px;
+    }
+    
+    .usage-detail {
+      font-size: 14px;
+      color: #718096;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 24px;
+      background: #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 12px;
+      position: relative;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      transition: width 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .progress-fill.warning {
+      background: linear-gradient(90deg, #f6ad55 0%, #ed8936 100%);
+    }
+    
+    .progress-fill.danger {
+      background: linear-gradient(90deg, #fc8181 0%, #f56565 100%);
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+    
+    .status-badge.success {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    
+    .status-badge.warning {
+      background: #fed7aa;
+      color: #7c2d12;
+    }
+    
+    .status-badge.danger {
+      background: #fed7d7;
+      color: #742a2a;
+    }
+    
+    .token-setup {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    .token-setup h2 {
+      margin-bottom: 16px;
+      color: #2d3748;
+    }
+    
+    .token-setup p {
+      color: #718096;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+    
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      font-family: monospace;
+    }
+    
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s;
+      margin: 4px;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    button.secondary {
+      background: #e2e8f0;
+      color: #2d3748;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .last-updated {
+      text-align: center;
+      color: #a0aec0;
+      font-size: 12px;
+      margin-top: 16px;
+    }
+    
+    .link {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    
+    .link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="tokenSetup" class="token-setup">
+      <h2>🚀 Welcome to Copilot Usage Monitor</h2>
+      <p>
+        To get started, you need to enter your GitHub Personal Access Token.<br>
+        The token needs the <strong>copilot</strong> scope to access usage data.
+      </p>
+      <p>
+        <a href="#" class="link" onclick="openGitHubTokenPage()">Create a token at GitHub Settings</a>
+      </p>
+      <input type="text" id="tokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+      <div>
+        <button onclick="saveToken()">Save Token</button>
+      </div>
+    </div>
+    
+    <div id="dashboard" class="hidden">
+      <h1>GitHub Copilot Usage</h1>
+      
+      <div class="usage-card">
+        <h2>Monthly Usage</h2>
+        <div class="usage-value" id="remainingValue">-</div>
+        <div class="usage-detail" id="remainingDetail">Loading...</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="monthlyProgress" style="width: 0%">0%</div>
+        </div>
+      </div>
+      
+      <div class="usage-card">
+        <h2>Today's Usage</h2>
+        <div class="usage-value" id="dailyValue">-</div>
+        <div class="usage-detail" id="dailyDetail">Loading...</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="dailyProgress" style="width: 0%">0%</div>
+        </div>
+        <div id="dailyStatus"></div>
+      </div>
+      
+      <div style="margin-top: 24px; text-align: center;">
+        <button onclick="refreshData()">🔄 Refresh</button>
+        <button class="secondary" onclick="clearToken()">Clear Token</button>
+      </div>
+      
+      <div class="last-updated" id="lastUpdated">Last updated: Never</div>
+    </div>
+  </div>
+  
+  <script>
+    // Use the secure electronAPI exposed via contextBridge
+    
+    // Check if token exists
+    window.addEventListener('DOMContentLoaded', () => {
+      // Request initial usage data
+      window.electronAPI.getUsageData();
+    });
+    
+    function openGitHubTokenPage() {
+      window.electronAPI.openExternal('https://github.com/settings/tokens/new?scopes=copilot&description=Copilot%20Usage%20Monitor');
+      return false;
+    }
+    
+    function saveToken() {
+      const token = document.getElementById('tokenInput').value.trim();
+      if (!token) {
+        alert('Please enter a valid token');
+        return;
+      }
+      
+      window.electronAPI.saveToken(token);
+    }
+    
+    function clearToken() {
+      if (confirm('Are you sure you want to clear the GitHub token?')) {
+        window.electronAPI.clearToken();
+      }
+    }
+    
+    function refreshData() {
+      window.electronAPI.getUsageData();
+    }
+    
+    // IPC listeners
+    window.electronAPI.onShowTokenInput(() => {
+      document.getElementById('tokenSetup').classList.remove('hidden');
+      document.getElementById('dashboard').classList.add('hidden');
+    });
+    
+    window.electronAPI.onTokenSaved(() => {
+      document.getElementById('tokenSetup').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      document.getElementById('tokenInput').value = '';
+    });
+    
+    window.electronAPI.onTokenCleared(() => {
+      document.getElementById('tokenSetup').classList.remove('hidden');
+      document.getElementById('dashboard').classList.add('hidden');
+    });
+    
+    window.electronAPI.onUsageDataUpdated((event, data) => {
+      if (!data) {
+        document.getElementById('tokenSetup').classList.remove('hidden');
+        document.getElementById('dashboard').classList.add('hidden');
+        return;
+      }
+      
+      document.getElementById('tokenSetup').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      
+      // Update monthly usage
+      const percentUsed = ((data.total - data.remaining) / data.total * 100);
+      document.getElementById('remainingValue').textContent = data.remaining.toLocaleString();
+      document.getElementById('remainingDetail').textContent = 
+        `${data.used.toLocaleString()} of ${data.total.toLocaleString()} used (${percentUsed.toFixed(1)}%)`;
+      
+      const monthlyProgressBar = document.getElementById('monthlyProgress');
+      monthlyProgressBar.style.width = `${percentUsed}%`;
+      monthlyProgressBar.textContent = `${percentUsed.toFixed(1)}%`;
+      
+      if (percentUsed > 90) {
+        monthlyProgressBar.className = 'progress-fill danger';
+      } else if (percentUsed > 70) {
+        monthlyProgressBar.className = 'progress-fill warning';
+      } else {
+        monthlyProgressBar.className = 'progress-fill';
+      }
+      
+      // Update daily usage
+      const dailyPercent = (data.daily / data.dailyLimit * 100);
+      document.getElementById('dailyValue').textContent = data.daily.toLocaleString();
+      document.getElementById('dailyDetail').textContent = 
+        `Daily limit: ${data.dailyLimit.toLocaleString()} requests`;
+      
+      const dailyProgressBar = document.getElementById('dailyProgress');
+      const dailyDisplayPercent = Math.min(100, dailyPercent);
+      dailyProgressBar.style.width = `${dailyDisplayPercent}%`;
+      dailyProgressBar.textContent = `${dailyPercent.toFixed(1)}%`;
+      
+      if (data.overLimit) {
+        dailyProgressBar.className = 'progress-fill danger';
+      } else if (dailyPercent > 80) {
+        dailyProgressBar.className = 'progress-fill warning';
+      } else {
+        dailyProgressBar.className = 'progress-fill';
+      }
+      
+      // Update status badge
+      const statusDiv = document.getElementById('dailyStatus');
+      if (data.overLimit) {
+        statusDiv.innerHTML = '<span class="status-badge danger">⚠️ Daily limit exceeded!</span>';
+      } else if (dailyPercent > 80) {
+        statusDiv.innerHTML = '<span class="status-badge warning">⚡ Close to daily limit</span>';
+      } else {
+        statusDiv.innerHTML = '<span class="status-badge success">✓ Within daily limit</span>';
+      }
+      
+      // Update last updated time
+      const now = new Date();
+      document.getElementById('lastUpdated').textContent = 
+        `Last updated: ${now.toLocaleTimeString()}`;
+    });
+  </script>
+</body>
+</html>
