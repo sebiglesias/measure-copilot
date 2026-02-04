@@ -130,8 +130,8 @@ The app calculates a "recommended daily limit" to help you use your Copilot quot
 
 **Problem**: Daily usage resets at wrong time
 **Solution**:
-- Daily usage is based on UTC timezone
-- Your "day" starts at midnight UTC, which may differ from your local time
+- Daily usage is based on your system's local date
+- Your "day" starts at midnight in your local timezone
 
 ## Privacy & Security
 

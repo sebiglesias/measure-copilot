@@ -13,7 +13,7 @@ class GitHubAPI {
       // Note: This uses the GitHub Copilot API endpoints
       const response = await axios.get(`${this.baseURL}/copilot/usage`, {
         headers: {
-          'Authorization': `Bearer ${this.token}`,
+          'Authorization': `token ${this.token}`,
           'Accept': 'application/vnd.github+json',
           'X-GitHub-Api-Version': '2022-11-28'
         }
@@ -106,7 +106,7 @@ class GitHubAPI {
   }
   
   calculateDailyUsage(usageInfo) {
-    // Calculate today's usage
+    // Calculate today's usage (using local date)
     const today = new Date().toISOString().split('T')[0];
     
     if (usageInfo.daily_usage && usageInfo.daily_usage[today]) {
