@@ -46,7 +46,7 @@ measure-copilot/
     ├── github-api.js     # GitHub API integration
     ├── index.html        # Dashboard UI
     └── assets/
-        └── icon.png      # Menu bar icon
+        └── iconTemplate.png      # Menu bar icon
 ```
 
 ## Key Capabilities
