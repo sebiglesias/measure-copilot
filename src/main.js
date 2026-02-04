@@ -10,7 +10,7 @@ let githubAPI = null;
 
 // Create the menu bar app
 function createTray() {
-  const iconPath = path.join(__dirname, 'assets', 'icon.png');
+  const iconPath = path.join(__dirname, 'assets', 'iconTemplate.png');
   tray = new Tray(iconPath);
   
   updateTrayMenu();
@@ -120,11 +120,20 @@ async function showTokenDialog() {
   }
 }
 
-async function refreshUsageData() {
+function sendUsageDataUpdate(targetWebContents, data) {
+  if (targetWebContents) {
+    targetWebContents.send('usage-data-updated', data);
+  } else if (window) {
+    window.webContents.send('usage-data-updated', data);
+  }
+}
+
+async function refreshUsageData(targetWebContents = null) {
   const token = store.get('githubToken');
   
   if (!token) {
     updateTrayMenu(null);
+    sendUsageDataUpdate(targetWebContents, null);
     return;
   }
   
@@ -135,13 +144,11 @@ async function refreshUsageData() {
   try {
     const usageData = await githubAPI.getUsageData();
     updateTrayMenu(usageData);
-    
-    if (window) {
-      window.webContents.send('usage-data-updated', usageData);
-    }
+    sendUsageDataUpdate(targetWebContents, usageData);
   } catch (error) {
     console.error('Error fetching usage data:', error);
     updateTrayMenu(null);
+    sendUsageDataUpdate(targetWebContents, null);
   }
 }
 
@@ -149,12 +156,12 @@ async function refreshUsageData() {
 ipcMain.on('save-token', async (event, token) => {
   store.set('githubToken', token);
   githubAPI = new GitHubAPI(token, store);
-  await refreshUsageData();
+  await refreshUsageData(event.sender);
   event.reply('token-saved');
 });
 
 ipcMain.on('get-usage-data', async (event) => {
-  await refreshUsageData();
+  await refreshUsageData(event.sender);
 });
 
 ipcMain.on('clear-token', (event) => {
