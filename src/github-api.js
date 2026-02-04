@@ -41,7 +41,8 @@ class GitHubAPI {
       
       try {
         // Try the user's Copilot billing endpoint first
-        response = await axios.get(`${this.baseURL}/user/copilot_seats`, {
+        // This checks if the user has Copilot access
+        response = await axios.get(`${this.baseURL}/copilot_billing/seats`, {
           headers: {
             'Authorization': `Bearer ${this.token}`,
             'Accept': 'application/vnd.github+json',
@@ -108,7 +109,6 @@ class GitHubAPI {
     } catch (error) {
       if (error.response?.status === 404 || error.response?.status === 403 || error.message.includes('not available')) {
         // Copilot API might not be available, use alternative approach
-        console.log('Copilot API not available, using fallback');
         return this.getUsageDataFallback();
       }
       if (error.response?.status === 401) {
